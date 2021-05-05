@@ -1,0 +1,32 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.31205.134
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BlazorServiceWorker", "BlazorServiceWorker\BlazorServiceWorker.csproj", "{2716C620-2C7C-4770-AF6C-2693E856E91E}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{D0927ADA-399A-41CC-AEC3-DA429053139C}"
+	ProjectSection(SolutionItems) = preProject
+		..\.gitignore = ..\.gitignore
+		..\LICENSE = ..\LICENSE
+		..\README.md = ..\README.md
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{2716C620-2C7C-4770-AF6C-2693E856E91E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2716C620-2C7C-4770-AF6C-2693E856E91E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2716C620-2C7C-4770-AF6C-2693E856E91E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2716C620-2C7C-4770-AF6C-2693E856E91E}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {894B6D4D-C7D2-4FD9-96EB-1F8E8814B9F5}
+	EndGlobalSection
+EndGlobal

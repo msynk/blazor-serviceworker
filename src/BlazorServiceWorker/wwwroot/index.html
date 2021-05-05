@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>BlazorServiceWorker</title>
+    <base href="/" />
+    <link href="css/bootstrap/bootstrap.min.css" rel="stylesheet" />
+    <link href="css/app.css" rel="stylesheet" />
+    <link href="BlazorServiceWorker.styles.css" rel="stylesheet" />
+    <style>
+        .app-update-notifier {
+            position: fixed;
+            background: #fff;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            top: 0;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .app-update-aria {
+            width: 70%;
+            margin: 0 auto;
+            margin-top: 45px;
+        }
+
+        .app-update-title {
+            font-size: 20px;
+            /*font-weight: bold;*/
+        }
+
+        .app-update-notification {
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+
+        #app-update-progress {
+            border: 1px solid #ebebff;
+            background-color: #f9f9f9;
+            border-radius: 4px;
+            width: 100%;
+            height: 21px;
+        }
+
+        #app-update-progress-bar {
+            background-color: #538fc3;
+            border-radius: 2px;
+            height: 19px;
+        }
+
+        #app-launch-counter {
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        #app-launch {
+            font-size: 16px;
+            color: #fff;
+            background-color: #5cb85c;
+            border-color: #4cae4c;
+            padding: 6px 12px;
+            line-height: 1.42857143;
+            text-align: center;
+            border: 1px solid transparent;
+            border-radius: 4px;
+            -webkit-appearance: button;
+            box-sizing: border-box;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="app" id="app-container">
+        <div id="app">Loading...</div>
+
+        <div id="blazor-error-ui">
+            An unhandled error has occurred.
+            <a href="" class="reload">Reload</a>
+            <a class="dismiss">🗙</a>
+        </div>
+    </div>
+
+    <div class="app-update-notifier" id="app-updater" style="display:none;">
+        <div class="app-update-aria">
+            <p class="app-update-title">New version is available</p>
+            <p class="app-update-notification">Downloading updates, please wait...</p>
+            <div id="app-update-progress">
+                <div id="app-update-progress-bar" style="width: 0%"></div>
+            </div>
+            <p class="app-update-title" id="app-update-percent">0 %</p>
+        </div>
+    </div>
+
+    <div class="app-update-notifier" id="app-launcher" style="display:none;">
+        <div class="app-update-aria">
+            <p class="app-update-title">Application updated!</p>
+            <p class="app-update-notification">Starting Application in <span id="app-launch-counter"></span> seconds...</p>
+            <button id="app-launch" onclick="reloadPage()">Start Application</button>
+        </div>
+    </div>
+
+    <script src="_framework/blazor.webassembly.js"></script>
+    <script>
+        (function () {
+            if (!('serviceWorker' in navigator)) return;
+
+            var container = document.getElementById('app-container'),
+                updater = document.getElementById('app-updater'),
+                launcher = document.getElementById('app-launcher'),
+                progress = document.getElementById('app-update-progress-bar'),
+                percent = document.getElementById('app-update-percent'),
+                counter = document.getElementById('app-launch-counter');
+
+            navigator.serviceWorker.register('sw.js').then(prepareRegistration);
+            navigator.serviceWorker.addEventListener('message', handleMessage);
+            navigator.serviceWorker.addEventListener('controllerchange', handleController);
+
+            var refreshing = false;
+            function handleController(e) {
+                console.log('SW controller changed.', e);
+                if (refreshing) return;
+                refreshing = true;
+                window.location.reload();
+            }
+
+            function prepareRegistration(reg) {
+                window.reloadPage = function () {
+                    if (navigator.serviceWorker.controller) {
+                        reg.waiting && reg.waiting.postMessage('skipwaiting');
+                    } else {
+                        window.location.reload();
+                    }
+                };
+
+                if (reg.waiting) {
+                    if (reg.installing) {
+                        showUpdater();
+                    } else {
+                        showLauncher();
+                    }
+                }
+                reg.addEventListener('updatefound', function (e) {
+                    console.log('SW update found', e);
+                    if (!reg.installing) return;
+                    reg.installing.addEventListener('statechange', function (e) {
+                        console.log('SW state chnaged', e, e.eventPhase, e.currentTarget);
+                        if (!reg.waiting) return;
+                        if (navigator.serviceWorker.controller) {
+                            console.log('SW updated');
+                        } else {
+                            console.log('SW initialized'); // first install
+                        }
+                    });
+                });
+            }
+
+            function handleMessage(e) {
+                var message = e.data, type = message.type, data = message.data;
+                console.log('message recieved', type, ':', data);
+
+                if (type == 'installing') {
+                    showUpdater();
+                }
+
+                if (type == 'progress') {
+                    var updatedPercent = data[1];
+                    progress.style.width = updatedPercent + '%';
+                    percent.innerHTML = updatedPercent + ' %';
+                }
+
+                if (type == 'installed') {
+                    showLauncher();
+                }
+
+                if (type == 'activate') {
+                }
+            }
+
+            function showUpdater() {
+                console.log('showUpdater');
+                container.style.display = 'none';
+                updater.style.display = 'block';
+                launcher.style.display = 'none';
+            }
+
+            function showLauncher() {
+                console.log('showLauncher');
+                container.style.display = 'none';
+                updater.style.display = 'none';
+                launcher.style.display = 'block';
+                counter.innerHTML = 10;
+                var handler = setInterval(function () {
+                    var count = Number(counter.innerHTML) - 1;
+                    if (count <= 0) {
+                        clearInterval(handler);
+                        reloadPage();
+                    }
+                    counter.innerHTML = count;
+                }, 1000);
+            }
+
+        }());
+    </script>
+</body>
+</html>
